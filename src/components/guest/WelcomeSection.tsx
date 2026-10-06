@@ -8,10 +8,10 @@ export function WelcomeSection({ property, lang }: Props) {
   const welcomeText = ml(property.welcomeText, lang);
 
   return (
-    <section className="bg-white rounded-2xl shadow-sm border border-amber-100 overflow-hidden print:shadow-none print:border-gray-300">
-      <div className="bg-gradient-to-r from-amber-600 to-orange-500 p-6 text-white">
+    <section className="bg-white rounded-2xl shadow-sm border border-sky-100 overflow-hidden print:shadow-none print:border-gray-300">
+      <div className="bg-gradient-to-r from-sky-700 via-blue-600 to-cyan-600 p-6 text-white">
         <h2 className="text-2xl font-bold">{tr('welcome', lang)}</h2>
-        <p className="text-amber-100 text-sm mt-1">{property.name}</p>
+        <p className="text-sky-100 text-sm mt-1">{property.name}</p>
       </div>
       <div className="p-6">
         <div className="flex flex-col sm:flex-row items-center gap-5">
@@ -20,11 +20,11 @@ export function WelcomeSection({ property, lang }: Props) {
               <img
                 src={property.hostPhotoUrl}
                 alt={property.hostName}
-                className="w-20 h-20 rounded-full object-cover border-4 border-amber-100 shadow"
+                className="w-20 h-20 rounded-full object-cover border-4 border-sky-100 shadow"
               />
             ) : (
-              <div className="w-20 h-20 rounded-full bg-amber-50 border-4 border-amber-100 flex items-center justify-center">
-                <User className="w-10 h-10 text-amber-400" />
+              <div className="w-20 h-20 rounded-full bg-sky-50 border-4 border-sky-100 flex items-center justify-center">
+                <User className="w-10 h-10 text-sky-400" />
               </div>
             )}
           </div>
@@ -44,14 +44,14 @@ export function WelcomeSection({ property, lang }: Props) {
               href={`https://wa.me/${property.hostPhone.replace(/\D/g, '')}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white font-medium py-3 px-5 rounded-xl transition-colors duration-200 print:hidden"
+              className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-3 px-5 rounded-xl transition-colors duration-200 shadow-sm print:hidden"
             >
               <MessageCircle className="w-5 h-5" />
               {tr('writeWhatsApp', lang)}
             </a>
             <a
               href={`tel:${property.hostPhone}`}
-              className="flex items-center justify-center gap-2 bg-amber-600 hover:bg-amber-700 text-white font-medium py-3 px-5 rounded-xl transition-colors duration-200"
+              className="flex items-center justify-center gap-2 bg-sky-600 hover:bg-sky-700 text-white font-medium py-3 px-5 rounded-xl transition-colors duration-200 shadow-sm"
             >
               <Phone className="w-5 h-5" />
               {tr('call', lang)}

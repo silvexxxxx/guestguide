@@ -4,9 +4,9 @@ import type { Property, HouseRule, LocalPlace, Transaction } from '@/types';
 export async function loadDemoData(propertyId: string) {
   const property: Property = {
     id: propertyId,
-    name: 'Casa del Sole - Appartamento nel Centro Storico',
-    description: 'Un appartamento luminoso e accogliente nel cuore del centro storico, a pochi passi dai principali monumenti.',
-    hostName: 'Marco Rossi',
+    name: 'Carloforte Bay - Dimora Marina',
+    description: 'Un\'accogliente dimora tipica tabarchina a pochi passi dal lungomare e dai caratteristici caruggi, base perfetta per vivere il mare e la magia dell\'Isola di San Pietro.',
+    hostName: 'Marco & Elena',
     hostPhone: '+393331234567',
     hostPhotoUrl: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=400',
     wifiName: 'CasaDelSole_Guest',
@@ -34,8 +34,8 @@ export async function loadDemoData(propertyId: string) {
       es: '¡Bienvenidos a Casa del Sole! Estamos felices de teneros con nosotros. Esta guía contiene todo lo que necesitáis saber para que vuestra estancia sea perfecta. No dudéis en contactarnos para cualquier necesidad.',
       de: 'Willkommen in der Casa del Sole! Wir freuen uns, Sie bei uns zu haben. Dieser Leitfaden enthält alles, was Sie wissen müssen, um Ihren Aufenthalt perfekt zu gestalten. Zögern Sie nicht, uns bei Bedarf zu kontaktieren.',
     },
-    address: 'Via Roma 42',
-    city: 'Firenze',
+    address: 'Via Solferino 12',
+    city: 'Carloforte (Sardegna)',
     adminPin: '1234',
   };
 

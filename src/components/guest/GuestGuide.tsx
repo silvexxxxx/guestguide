@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Printer, QrCode } from 'lucide-react';
 import { LanguageSelector } from './LanguageSelector';
+import { HeroCarousel } from './HeroCarousel';
 import { WelcomeSection } from './WelcomeSection';
 import { WifiSection } from './WifiSection';
 import { CheckInSection } from './CheckInSection';
@@ -27,9 +28,9 @@ export function GuestGuide({ property, houseRules, localPlaces, onAdminClick }: 
   }
 
   return (
-    <div className="min-h-screen bg-amber-50/40">
+    <div className="min-h-screen bg-gradient-to-b from-sky-50/70 via-slate-50 to-cyan-50/30">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-amber-100 sticky top-0 z-20 print:hidden">
+      <header className="bg-white/95 backdrop-blur-md shadow-xs border-b border-sky-100/80 sticky top-0 z-30 print:hidden">
         <div className="max-w-2xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between mb-3">
             <div>
@@ -72,7 +73,8 @@ export function GuestGuide({ property, houseRules, localPlaces, onAdminClick }: 
       </div>
 
       {/* Content */}
-      <main className="max-w-2xl mx-auto px-4 py-5 space-y-5">
+      <main className="max-w-2xl mx-auto px-4 py-5 space-y-6">
+        <HeroCarousel property={property} lang={lang} />
         <WelcomeSection property={property} lang={lang} />
         <WifiSection property={property} lang={lang} />
         <CheckInSection property={property} lang={lang} />
