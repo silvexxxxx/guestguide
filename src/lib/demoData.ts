@@ -36,6 +36,7 @@ export async function loadDemoData(propertyId: string) {
     },
     address: 'Via Roma 42',
     city: 'Firenze',
+    adminPin: '1234',
   };
 
   await db.properties.put(property);

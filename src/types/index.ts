@@ -18,6 +18,7 @@ export interface Property {
   welcomeText: Partial<MultiLang>;
   address: string;
   city: string;
+  adminPin?: string;
 }
 
 export interface HouseRule {

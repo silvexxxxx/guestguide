@@ -6,7 +6,6 @@ import { useProperty } from '@/hooks/useProperty';
 
 type View = 'guest' | 'admin';
 
-const HOST_PIN = '1234';
 
 export default function App() {
   const [view, setView] = useState<View>('guest');
@@ -22,7 +21,8 @@ export default function App() {
 
   const handlePinSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (enteredPin === HOST_PIN) {
+    const currentPin = property?.adminPin || '1234';
+    if (enteredPin === currentPin) {
       setPinError(false);
       setEnteredPin('');
       setShowPinModal(false);
@@ -99,7 +99,7 @@ export default function App() {
                   type="password"
                   maxLength={8}
                   autoFocus
-                  placeholder="PIN (predefinito: 1234)"
+                  placeholder="Inserisci il PIN"
                   value={enteredPin}
                   onChange={(e) => {
                     setEnteredPin(e.target.value);
@@ -113,7 +113,7 @@ export default function App() {
                 />
                 {pinError && (
                   <p className="text-xs text-red-500 text-center mt-1.5 font-medium">
-                    PIN errato. Il PIN predefinito è 1234
+                    PIN errato. Riprova.
                   </p>
                 )}
               </div>

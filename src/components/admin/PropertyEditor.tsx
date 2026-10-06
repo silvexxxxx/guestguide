@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Save, Check, Loader } from 'lucide-react';
+import { Save, Check, Loader, Lock } from 'lucide-react';
 import type { Property } from '@/types';
 import type { Lang } from '@/lib/i18n';
 import { LANGUAGES } from '@/lib/i18n';
@@ -114,6 +114,27 @@ export function PropertyEditor({ property, onSave }: Props) {
         <MLTextarea label="Messaggio di Benvenuto" value={form.welcomeText as Record<Lang, string>} onChange={v => set('welcomeText', v)} />
         <MLTextarea label="Istruzioni Check-in" value={form.checkinInstructions as Record<Lang, string>} onChange={v => set('checkinInstructions', v)} />
         <MLTextarea label="Istruzioni Check-out" value={form.checkoutInstructions as Record<Lang, string>} onChange={v => set('checkoutInstructions', v)} />
+      </div>
+
+      <div className="border-t border-gray-100 pt-4">
+        <h3 className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
+          <Lock className="w-4 h-4 text-amber-600" />
+          Sicurezza & PIN Host
+        </h3>
+        <p className="text-xs text-gray-500 mb-3">
+          Questo PIN protegge l'accesso alle impostazioni e alle finanze della casa.
+        </p>
+        <div className="max-w-xs">
+          <label className="block text-xs font-medium text-gray-600 mb-1">PIN di Accesso (4-8 cifre)</label>
+          <input
+            type="text"
+            className="w-full border border-gray-200 rounded-xl px-3 py-2 text-base focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none transition font-mono tracking-widest"
+            value={form.adminPin ?? '1234'}
+            onChange={e => set('adminPin', e.target.value)}
+            placeholder="1234"
+            maxLength={8}
+          />
+        </div>
       </div>
 
       <button
