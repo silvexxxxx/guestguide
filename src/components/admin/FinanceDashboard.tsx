@@ -117,7 +117,7 @@ export function FinanceDashboard({ transactions, onAdd, onDelete }: Props) {
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
               <XAxis dataKey="name" tick={{ fontSize: 12 }} />
               <YAxis tick={{ fontSize: 11 }} tickFormatter={v => `${v}€`} />
-              <Tooltip formatter={(v: number) => [`€ ${v.toFixed(2)}`, '']} />
+              <Tooltip formatter={(v: any) => [`€ ${Number(v || 0).toFixed(2)}`, '']} />
               <Legend wrapperStyle={{ fontSize: 12 }} />
               <Bar dataKey="income" name="Entrate" fill="#22c55e" radius={[4, 4, 0, 0]} />
               <Bar dataKey="expense" name="Uscite" fill="#f87171" radius={[4, 4, 0, 0]} />

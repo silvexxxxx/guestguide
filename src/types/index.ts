@@ -4,6 +4,8 @@ export type { Lang, MultiLang };
 
 export interface Property {
   id: string;
+  userId?: string;
+  slug?: string;
   name: string;
   description: string;
   hostName: string;
@@ -19,6 +21,24 @@ export interface Property {
   address: string;
   city: string;
   adminPin?: string;
+  isPublic?: boolean;
+}
+
+export type AccessType = 'free_trial' | 'lemonsqueezy' | 'manual_grant' | 'lifetime';
+
+export interface HostSubscription {
+  id: string;
+  userId: string;
+  email: string;
+  role: 'host' | 'superadmin';
+  accessType: AccessType;
+  validUntil: string | null;
+  maxProperties: number;
+  isActive: boolean;
+  adminNotes?: string;
+  lsCustomerId?: string;
+  lsSubscriptionId?: string;
+  createdAt?: string;
 }
 
 export interface HouseRule {
