@@ -13,96 +13,99 @@ export function useProperty() {
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
-    setLoading(true);
-
-    // 1. Se l'utente è loggato con Supabase, carichiamo i dati dal Cloud
-    if (user && isSupabaseConfigured) {
-      try {
-        // Cerca proprietà dell'host
-        const { data: propRows, error: propErr } = await supabase
-          .from('properties')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
-
-        let currentProp: Property | null = null;
-
-        if (!propErr && propRows && propRows.length > 0) {
-          currentProp = mapSupabaseToProperty(propRows[0]);
-        } else {
-          // Se non ha ancora una proprietà su Supabase, creiamo la prima con i dati guida Carloforte
-          currentProp = await seedInitialPropertyForUser(user.id);
-        }
-
-        if (currentProp) {
-          setProperty(currentProp);
-          // Aggiorna anche Dexie per cache offline
-          await db.properties.put(currentProp);
-
-          // Carica Regole dal Cloud
-          const { data: rulesData } = await supabase
-            .from('house_rules')
-            .select('*')
-            .eq('property_id', currentProp.id)
-            .order('sort_order', { ascending: true });
-
-          if (rulesData) {
-            const mappedRules: HouseRule[] = rulesData.map((r) => ({
-              id: r.id,
-              propertyId: r.property_id,
-              icon: r.icon,
-              label: r.label || {},
-              sortOrder: r.sort_order ?? 0,
-            }));
-            setHouseRules(mappedRules);
-            // Salva in Dexie
-            await db.houseRules.bulkPut(mappedRules);
-          }
-
-          // Carica Luoghi dal Cloud
-          const { data: placesData } = await supabase
-            .from('local_places')
-            .select('*')
-            .eq('property_id', currentProp.id)
-            .order('sort_order', { ascending: true });
-
-          if (placesData) {
-            const mappedPlaces: LocalPlace[] = placesData.map((p) => ({
-              id: p.id,
-              propertyId: p.property_id,
-              category: p.category,
-              name: p.name,
-              address: p.address || '',
-              description: p.description || {},
-              mapsUrl: p.maps_url || '',
-              phone: p.phone || '',
-              sortOrder: p.sort_order ?? 0,
-            }));
-            setLocalPlaces(mappedPlaces);
-            // Salva in Dexie
-            await db.localPlaces.bulkPut(mappedPlaces);
-          }
-
-          setLoading(false);
-          return;
-        }
-      } catch (cloudErr) {
-        console.warn('Errore connessione Supabase, fallback su cache locale:', cloudErr);
+    // 1. CARICAMENTO IMMEDIATO DA CACHE LOCALE (0 millisecondi)
+    // Sblocca all'istante lo schermo per non lasciare MAI l'utente su uno spinner bloccato
+    try {
+      const cached = await getOrCreateProperty();
+      if (cached) {
+        setProperty(cached);
+        const rules = await db.houseRules.where('propertyId').equals(cached.id).sortBy('sortOrder');
+        setHouseRules(rules);
+        const places = await db.localPlaces.where('propertyId').equals(cached.id).sortBy('sortOrder');
+        setLocalPlaces(places);
       }
+    } catch (cacheErr) {
+      console.warn('Avviso lettura cache locale:', cacheErr);
+    } finally {
+      // Sblocca SEMPRE immediatamente lo stato di loading!
+      setLoading(false);
     }
 
-    // 2. Fallback su Dexie IndexedDB (modalità Guest o offline)
-    try {
-      const p = await getOrCreateProperty();
-      setProperty(p);
-      const rules = await db.houseRules.where('propertyId').equals(p.id).sortBy('sortOrder');
-      setHouseRules(rules);
-      const places = await db.localPlaces.where('propertyId').equals(p.id).sortBy('sortOrder');
-      setLocalPlaces(places);
-    } catch (dbErr) {
-      console.error('Errore caricamento Dexie:', dbErr);
-    } finally {
-      setLoading(false);
+    // 2. SINCRONIZZAZIONE ASINCRONA IN BACKGROUND CON SUPABASE CLOUD (con timeout 6s)
+    if (user && isSupabaseConfigured) {
+      try {
+        const cloudSyncPromise = async () => {
+          const { data: propRows, error: propErr } = await supabase
+            .from('properties')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false });
+
+          let currentProp: Property | null = null;
+
+          if (!propErr && propRows && propRows.length > 0) {
+            currentProp = mapSupabaseToProperty(propRows[0]);
+          } else {
+            // Se non c'è ancora una proprietà nel cloud per questo Host, creiamola
+            currentProp = await seedInitialPropertyForUser(user.id);
+          }
+
+          if (currentProp) {
+            setProperty(currentProp);
+            await db.properties.put(currentProp);
+
+            // Carica Regole
+            const { data: rulesData } = await supabase
+              .from('house_rules')
+              .select('*')
+              .eq('property_id', currentProp.id)
+              .order('sort_order', { ascending: true });
+
+            if (rulesData && rulesData.length > 0) {
+              const mappedRules: HouseRule[] = rulesData.map((r) => ({
+                id: r.id,
+                propertyId: r.property_id,
+                icon: r.icon,
+                label: r.label || {},
+                sortOrder: r.sort_order ?? 0,
+              }));
+              setHouseRules(mappedRules);
+              await db.houseRules.bulkPut(mappedRules);
+            }
+
+            // Carica Luoghi Consigliati
+            const { data: placesData } = await supabase
+              .from('local_places')
+              .select('*')
+              .eq('property_id', currentProp.id)
+              .order('sort_order', { ascending: true });
+
+            if (placesData && placesData.length > 0) {
+              const mappedPlaces: LocalPlace[] = placesData.map((p) => ({
+                id: p.id,
+                propertyId: p.property_id,
+                category: p.category,
+                name: p.name,
+                address: p.address || '',
+                description: p.description || {},
+                mapsUrl: p.maps_url || '',
+                phone: p.phone || '',
+                sortOrder: p.sort_order ?? 0,
+              }));
+              setLocalPlaces(mappedPlaces);
+              await db.localPlaces.bulkPut(mappedPlaces);
+            }
+          }
+        };
+
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Cloud sync timeout')), 6000)
+        );
+
+        await Promise.race([cloudSyncPromise(), timeoutPromise]);
+      } catch (cloudErr) {
+        console.warn('Sincronizzazione Cloud in background completata con fallback locale:', cloudErr);
+      }
     }
   }, [user]);
 
@@ -115,7 +118,6 @@ export function useProperty() {
       if (!property) return;
       const updated = { ...property, ...updates };
 
-      // Se autenticato su Supabase, aggiorna cloud
       if (user && isSupabaseConfigured) {
         try {
           const payload = mapPropertyToSupabase(updates);
@@ -125,7 +127,6 @@ export function useProperty() {
         }
       }
 
-      // Aggiorna sempre anche Dexie
       await db.properties.put(updated);
       setProperty(updated);
     },
@@ -285,8 +286,18 @@ export function useTransactions(propertyId: string | undefined) {
 
   const load = useCallback(async () => {
     if (!propertyId) return;
-    setLoading(true);
 
+    // Cache-first immediato
+    try {
+      const txs = await db.transactions.where('propertyId').equals(propertyId).reverse().sortBy('date');
+      setTransactions(txs);
+    } catch (e) {
+      console.warn('Errore lettura transazioni locali:', e);
+    } finally {
+      setLoading(false);
+    }
+
+    // Background sync
     if (user && isSupabaseConfigured) {
       try {
         const { data } = await supabase
@@ -295,7 +306,7 @@ export function useTransactions(propertyId: string | undefined) {
           .eq('property_id', propertyId)
           .order('date', { ascending: false });
 
-        if (data) {
+        if (data && data.length > 0) {
           const mapped: Transaction[] = data.map((t) => ({
             id: t.id,
             propertyId: t.property_id,
@@ -308,17 +319,11 @@ export function useTransactions(propertyId: string | undefined) {
           }));
           setTransactions(mapped);
           await db.transactions.bulkPut(mapped);
-          setLoading(false);
-          return;
         }
       } catch (err) {
         console.warn('Errore transazioni Supabase:', err);
       }
     }
-
-    const txs = await db.transactions.where('propertyId').equals(propertyId).reverse().sortBy('date');
-    setTransactions(txs);
-    setLoading(false);
   }, [propertyId, user]);
 
   useEffect(() => {
