@@ -6,9 +6,10 @@ interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+  onUsePin?: () => void;
 }
 
-export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess }) => {
+export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess, onUsePin }) => {
   const { signIn, signUp } = useAuth();
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [email, setEmail] = useState('');
@@ -238,6 +239,18 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
                 {mode === 'login' ? 'Registrati gratis' : 'Accedi'}
               </button>
             </p>
+
+            {onUsePin && (
+              <div className="mt-3">
+                <button
+                  type="button"
+                  onClick={onUsePin}
+                  className="text-[11px] text-gray-400 hover:text-gray-600 cursor-pointer"
+                >
+                  Oppure sblocca rapidamente con PIN struttura
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>

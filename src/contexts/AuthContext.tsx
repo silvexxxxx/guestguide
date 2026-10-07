@@ -17,7 +17,16 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const SUPERADMIN_EMAIL = (import.meta.env.VITE_SUPERADMIN_EMAIL || '').toLowerCase().trim();
+// Lista email SuperAdmin autorizzate (con fallback garantito)
+const SUPERADMIN_EMAILS = [
+  'silveriopintus@gmail.com',
+  (import.meta.env.VITE_SUPERADMIN_EMAIL || '').toLowerCase().trim(),
+].filter(Boolean);
+
+export const isSuperAdminEmail = (email?: string | null): boolean => {
+  if (!email) return false;
+  return SUPERADMIN_EMAILS.includes(email.toLowerCase().trim());
+};
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -27,6 +36,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const fetchSubscription = useCallback(async (userId: string, userEmail: string) => {
     if (!isSupabaseConfigured) return;
+    const isUserOwner = isSuperAdminEmail(userEmail);
+
     try {
       const { data, error } = await supabase
         .from('host_subscriptions')
@@ -36,18 +47,59 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) {
         console.warn('Errore lettura sottoscrizione:', error.message);
+        // Fallback per SuperAdmin
+        if (isUserOwner) {
+          setSubscription({
+            id: userId,
+            userId: userId,
+            email: userEmail,
+            role: 'superadmin',
+            accessType: 'lifetime',
+            validUntil: null,
+            maxProperties: 99,
+            isActive: true,
+          });
+        }
         return;
       }
 
       if (data) {
+        // Se è il SuperAdmin ma sul DB era ancora segnato come 'host', eleviamolo sul DB
+        if (isUserOwner && (data.role !== 'superadmin' || data.access_type !== 'lifetime')) {
+          await supabase
+            .from('host_subscriptions')
+            .update({
+              role: 'superadmin',
+              access_type: 'lifetime',
+              valid_until: null,
+              max_properties: 99,
+              is_active: true,
+            })
+            .eq('user_id', userId);
+
+          setSubscription({
+            id: data.id,
+            userId: data.user_id,
+            email: data.email,
+            role: 'superadmin',
+            accessType: 'lifetime',
+            validUntil: null,
+            maxProperties: 99,
+            isActive: true,
+            adminNotes: data.admin_notes,
+            createdAt: data.created_at,
+          });
+          return;
+        }
+
         setSubscription({
           id: data.id,
           userId: data.user_id,
           email: data.email,
-          role: data.role,
-          accessType: data.access_type,
-          validUntil: data.valid_until,
-          maxProperties: data.max_properties,
+          role: isUserOwner ? 'superadmin' : data.role,
+          accessType: isUserOwner ? 'lifetime' : data.access_type,
+          validUntil: isUserOwner ? null : data.valid_until,
+          maxProperties: isUserOwner ? 99 : data.max_properties,
           isActive: data.is_active,
           adminNotes: data.admin_notes,
           lsCustomerId: data.ls_customer_id,
@@ -55,15 +107,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           createdAt: data.created_at,
         });
       } else {
-        // Se la riga non esiste ancora (es. trigger in ritardo), creiamola con prova gratuita
-        const isUserSuperAdmin = userEmail.toLowerCase() === SUPERADMIN_EMAIL;
+        // Se la riga non esiste ancora, creiamola
         const newSub = {
           user_id: userId,
           email: userEmail,
-          role: isUserSuperAdmin ? 'superadmin' : 'host',
-          access_type: isUserSuperAdmin ? 'lifetime' : 'free_trial',
-          valid_until: isUserSuperAdmin ? null : new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
-          max_properties: isUserSuperAdmin ? 99 : 1,
+          role: isUserOwner ? 'superadmin' : 'host',
+          access_type: isUserOwner ? 'lifetime' : 'free_trial',
+          valid_until: isUserOwner ? null : new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+          max_properties: isUserOwner ? 99 : 1,
           is_active: true,
         };
 
@@ -166,9 +217,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const isSuperAdmin = Boolean(
-    (user?.email && user.email.toLowerCase() === SUPERADMIN_EMAIL) ||
-    subscription?.role === 'superadmin' ||
-    subscription?.accessType === 'lifetime' && user?.email?.toLowerCase() === SUPERADMIN_EMAIL
+    isSuperAdminEmail(user?.email) || subscription?.role === 'superadmin'
   );
 
   return (

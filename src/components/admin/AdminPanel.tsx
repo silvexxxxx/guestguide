@@ -107,6 +107,20 @@ export function AdminPanel({
           </div>
 
           <div className="flex items-center gap-2">
+            {isSuperAdmin && (
+              <button
+                onClick={() => setActiveTab('superadmin')}
+                className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                  activeTab === 'superadmin'
+                    ? 'bg-gradient-to-r from-purple-900 to-indigo-900 text-amber-300 shadow-sm border border-purple-800 ring-2 ring-amber-400/50'
+                    : 'bg-purple-100 hover:bg-purple-200 text-purple-900 border border-purple-200'
+                }`}
+              >
+                <Crown className="w-3.5 h-3.5 text-amber-500" />
+                <span>SuperAdmin</span>
+              </button>
+            )}
+
             <button
               onClick={handleLoadDemo}
               disabled={loadingDemo}

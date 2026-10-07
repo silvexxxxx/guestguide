@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Loader, Lock, X, LogIn, Sparkles } from 'lucide-react';
+import { Loader, Lock, X, KeyRound, Sparkles } from 'lucide-react';
 import { GuestGuide } from '@/components/guest/GuestGuide';
 import { AdminPanel } from '@/components/admin/AdminPanel';
 import { AuthModal } from '@/components/auth/AuthModal';
@@ -23,15 +23,15 @@ export default function App() {
     addPlace, updatePlace, deletePlace, reload,
   } = useProperty();
 
+  // Quando si clicca "Admin" dalla vista ospite:
   const handleAdminTrigger = () => {
-    // Se l'host è già autenticato con il suo account Supabase, entra direttamente
     if (user) {
+      // Se già loggato con l'account Host, entra diretto
       setView('admin');
-      return;
+    } else {
+      // Se non è loggato, apre direttamente il Login Host (Email/Password)
+      setShowAuthModal(true);
     }
-    setPinError(false);
-    setEnteredPin('');
-    setShowPinModal(true);
   };
 
   const handlePinSubmit = (e: React.FormEvent) => {
@@ -84,7 +84,21 @@ export default function App() {
         onAdminClick={handleAdminTrigger}
       />
 
-      {/* Modal PIN Host */}
+      {/* Modal Autenticazione Host Cloud (Predefinito al clic su Admin) */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onSuccess={() => {
+          setShowAuthModal(false);
+          setView('admin');
+        }}
+        onUsePin={() => {
+          setShowAuthModal(false);
+          setShowPinModal(true);
+        }}
+      />
+
+      {/* Modal PIN Rapido (Opzionale di emergenza) */}
       {showPinModal && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-150">
           <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl relative border border-amber-100 animate-in zoom-in-95 duration-150">
@@ -96,12 +110,12 @@ export default function App() {
             </button>
 
             <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center mx-auto mb-4 shadow-xs">
-              <Lock className="w-6 h-6" />
+              <KeyRound className="w-6 h-6" />
             </div>
 
-            <h3 className="text-lg font-bold text-center text-gray-800">Accesso Gestione Host</h3>
+            <h3 className="text-lg font-bold text-center text-gray-800">Sblocco Rapido PIN</h3>
             <p className="text-xs text-center text-gray-500 mt-1 mb-5">
-              Inserisci il PIN per modificare questa casa vacanze
+              Inserisci il PIN della casa vacanze
             </p>
 
             <form onSubmit={handlePinSubmit} className="space-y-4">
@@ -141,12 +155,11 @@ export default function App() {
                   type="submit"
                   className="flex-1 py-2.5 px-4 text-xs font-semibold text-white bg-amber-600 hover:bg-amber-700 rounded-xl transition shadow-xs cursor-pointer"
                 >
-                  Sblocca con PIN
+                  Sblocca
                 </button>
               </div>
             </form>
 
-            {/* Opzione alternativa: Login Cloud Host */}
             <div className="mt-5 pt-4 border-t border-gray-100 text-center">
               <button
                 type="button"
@@ -154,25 +167,14 @@ export default function App() {
                   setShowPinModal(false);
                   setShowAuthModal(true);
                 }}
-                className="inline-flex items-center gap-1.5 text-xs text-amber-700 hover:text-amber-800 font-semibold cursor-pointer py-1"
+                className="text-xs text-amber-700 hover:text-amber-800 font-semibold cursor-pointer"
               >
-                <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                <span>Accedi con Account Host Cloud</span>
+                ← Torna all'accesso con Email e Password
               </button>
             </div>
           </div>
         </div>
       )}
-
-      {/* Modal Autenticazione Host Cloud */}
-      <AuthModal
-        isOpen={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
-        onSuccess={() => {
-          setShowAuthModal(false);
-          setView('admin');
-        }}
-      />
     </>
   );
 }
