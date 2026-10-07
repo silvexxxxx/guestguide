@@ -3,6 +3,7 @@ import { Loader, Lock, X, KeyRound, Sparkles } from 'lucide-react';
 import { GuestGuide } from '@/components/guest/GuestGuide';
 import { AdminPanel } from '@/components/admin/AdminPanel';
 import { AuthModal } from '@/components/auth/AuthModal';
+import { PWAInstallButton } from '@/components/common/PWAInstallButton';
 import { useProperty } from '@/hooks/useProperty';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -60,18 +61,21 @@ export default function App() {
 
   if (view === 'admin') {
     return (
-      <AdminPanel
-        property={property}
-        houseRules={houseRules}
-        localPlaces={localPlaces}
-        onSaveProperty={saveProperty}
-        onAddRule={addRule}
-        onDeleteRule={deleteRule}
-        onAddPlace={addPlace}
-        onDeletePlace={deletePlace}
-        onReload={reload}
-        onGuestView={() => setView('guest')}
-      />
+      <>
+        <AdminPanel
+          property={property}
+          houseRules={houseRules}
+          localPlaces={localPlaces}
+          onSaveProperty={saveProperty}
+          onAddRule={addRule}
+          onDeleteRule={deleteRule}
+          onAddPlace={addPlace}
+          onDeletePlace={deletePlace}
+          onReload={reload}
+          onGuestView={() => setView('guest')}
+        />
+        <PWAInstallButton />
+      </>
     );
   }
 
@@ -175,6 +179,9 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {/* Pulsante Flottante Installa PWA */}
+      <PWAInstallButton />
     </>
   );
 }
